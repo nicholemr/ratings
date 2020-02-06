@@ -25,12 +25,7 @@ def index():
     """Homepage."""
     return render_template("homepage.html")
 
-@app.route("/users")
-def user_list():
-    """Show list of users."""
 
-    users = User.query.all()
-    return render_template("user_list.html", users=users)
 
 
 @app.route("/register", methods=["GET"])
@@ -76,30 +71,74 @@ def login_process():
         
         
         # query user_id
-        user = User.query.filter(email ==email, password ==password).all()
+        user = User.query.filter(email ==email, password ==password).first()
 
-        # add user_id to Flask Session
-        if session.get('user_id') is not None:
-            session['user_id'] = user.user_id
-        else:
-            session['user_id'] = []
-
+        session['current_user'] = user.user_id
+        ## fix sessions- left off here, try to find session notes for reference
         
-        flash("Logged in! Hi {user.user_id}")
+        flash(f'Logged in! Hi User # {user.user_id}')
         
-        return redirect("/")
+        return redirect(f"/{user.user_id}")
 
     else:
         flash("Invalid Email and Password")
         
-        return redirect("/")
-     
+        return redirect("/")  
 
     return redirect("/")
 
 
+@app.route("/logout")
+def logout_process():
+    session.clear()
+    flash("You've been logged out!")
 
-    #check if email is in users table (if email field is not null)
+    return redirect("/")
+
+# <form action='/{{ user.user_id }}' method='post'>
+@app.route("/users")
+def user_list():
+    """Show list of users."""
+
+    users = User.query.all()
+    return render_template("user_list.html", users=users)
+
+
+@app.route("/users/<int:user_id>")
+def user_details(user_id):
+
+    user = User.query.get(user_id)
+    user_id = user.user_id
+    user_zip = user.zipcode
+    user_age = user.age
+
+    user_ratings = Rating.query.filter(user_id == user_id).all()
+
+
+    return render_template('user_details.html', user_id=user_id, user_zip=user_zip, user_age=user_age, user_ratings=user_ratings)
+
+
+
+@app.route("/movies")
+def movie_list():
+    """Show list of users."""
+
+    movies = Movie.query.all()
+    return render_template("movie_list.html", movies=movies)
+
+
+@app.route("/movies/<int:movie_id>")
+def movie_details(movie_id):
+
+    movie = Movie.query.get(movie_id)
+    movie_id = movie.movie_id
+    user_zip = user.zipcode
+    user_age = user.age
+
+    user_ratings = Rating.query.filter(user_id == user_id).all()
+
+
+    return render_template('user_details.html', user_id=user_id, user_zip=user_zip, user_age=user_age, user_ratings=user_ratings)
 
 
 if __name__ == "__main__":
